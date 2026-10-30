@@ -1,26 +1,26 @@
+
 """
 CWI — Predictive Causal Intelligence (PCI)
-Version: 0.1.0
+Version: 0.1.1
 Experiment: EXP-047B
 
-Purpose:
-    Provide a persistent, traceable foundation for causal experiments,
-    predictions, and feedback.
+Research implementation for traceable causal experiments,
+predictions, and feedback.
 
 Scientific boundary:
-    This implementation does not claim to discover causal truth.
-    Causal conclusions depend on identification assumptions, data,
-    and the validity of the selected estimation method.
+    This implementation does not establish causal truth.
+    Estimates depend on data, assumptions, identification,
+    and estimation methods.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sqlite3
 import uuid
 
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -33,12 +33,16 @@ from typing import Any, Optional
 PROJECT_NAME = "Causal World Intelligence"
 ARCHITECTURE_NAME = "Predictive Causal Intelligence"
 
-ARCHITECTURE_VERSION = "0.1.0"
+ARCHITECTURE_VERSION = "0.1.1"
 EXPERIMENT_ID = "EXP-047B"
+
 DATABASE_SCHEMA_VERSION = 1
+FINGERPRINT_VERSION = "1"
 
 DEFAULT_DATA_DIRECTORY = Path.home() / ".cwi"
-DEFAULT_DATABASE_PATH = DEFAULT_DATA_DIRECTORY / "cwi_history.sqlite3"
+DEFAULT_DATABASE_PATH = (
+    DEFAULT_DATA_DIRECTORY / "cwi_history.sqlite3"
+)
 
 
 # ============================================================
@@ -50,15 +54,15 @@ class CWIError(Exception):
 
 
 class ValidationError(CWIError):
-    """Raised when supplied information is invalid."""
+    """Invalid input."""
 
 
 class RecordNotFoundError(CWIError):
-    """Raised when a requested record does not exist."""
+    """Requested record does not exist."""
 
 
 class DatabaseVersionError(CWIError):
-    """Raised when the database schema is incompatible."""
+    """Database schema is incompatible."""
 
 
 # ============================================================
@@ -66,24 +70,24 @@ class DatabaseVersionError(CWIError):
 # ============================================================
 
 def utc_now() -> str:
-    """Return the current UTC time in ISO 8601 format."""
     return datetime.now(timezone.utc).isoformat()
 
 
 def create_id() -> str:
-    """Generate a complete UUID."""
     return str(uuid.uuid4())
 
 
 def validate_name(value: str, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
-        raise ValidationError(f"{field_name} must be a non-empty string.")
+        raise ValidationError(
+            f"{field_name} must be a non-empty string."
+        )
 
     return value.strip()
 
 
 def canonical_json(data: Any) -> str:
-    """Serialize data deterministically."""
+    """Produce deterministic JSON."""
     try:
         return json.dumps(
             data,
@@ -93,31 +97,147 @@ def canonical_json(data: Any) -> str:
             allow_nan=False,
         )
     except (TypeError, ValueError) as exc:
-        raise ValidationError(f"Data cannot be serialized: {exc}") from exc
+        raise ValidationError(
+            f"Data cannot be serialized: {exc}"
+        ) from exc
+
+
+def validate_estimand(estimand: Any) -> str:
+    if not isinstance(estimand, dict) or not estimand:
+        raise ValidationError(
+            "A non-empty estimand dictionary is required."
+        )
+
+    return canonical_json(estimand)
+
+
+def validate_finite_number(value: Any, field_name: str) -> float:
+    if isinstance(value, bool):
+        raise ValidationError(
+            f"{field_name} must be numeric, not boolean."
+        )
+
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError(
+            f"{field_name} must be numeric."
+        ) from exc
+
+    if not math.isfinite(number):
+        raise ValidationError(
+            f"{field_name} must be finite."
+        )
+
+    return number
 
 
 def fingerprint_dataset(data: Any) -> str:
     """
-    Calculate SHA-256 fingerprint from a dataset representation.
+    Create a SHA-256 fingerprint.
 
-    The caller must provide a stable, deterministic representation.
+    Pandas DataFrames use pandas row hashing plus schema metadata.
+    Other supported data uses deterministic JSON serialization.
     """
-    serialized = canonical_json(data).encode("utf-8")
-    return hashlib.sha256(serialized).hexdigest()
+
+    digest = hashlib.sha256()
+
+    # Pandas DataFrame support
+    if (
+        data.__class__.__name__ == "DataFrame"
+        and data.__class__.__module__.startswith("pandas")
+    ):
+        try:
+            import pandas as pd
+
+            schema = {
+                "fingerprint_version": FINGERPRINT_VERSION,
+                "kind": "pandas_dataframe",
+                "columns": [str(column) for column in data.columns],
+                "dtypes": [str(dtype) for dtype in data.dtypes],
+                "index_names": [
+                    str(name) if name is not None else None
+                    for name in data.index.names
+                ],
+                "shape": list(data.shape),
+            }
+
+            digest.update(
+                canonical_json(schema).encode("utf-8")
+            )
+
+            row_hashes = pd.util.hash_pandas_object(
+                data,
+                index=True,
+                categorize=True,
+            )
+
+            digest.update(row_hashes.to_numpy().tobytes())
+
+            return digest.hexdigest()
+
+        except Exception as exc:
+            raise ValidationError(
+                f"Could not fingerprint DataFrame: {exc}"
+            ) from exc
+
+    # Generic JSON-compatible data
+    serialized = canonical_json({
+        "fingerprint_version": FINGERPRINT_VERSION,
+        "data": data,
+    })
+
+    digest.update(serialized.encode("utf-8"))
+
+    return digest.hexdigest()
 
 
 # ============================================================
-# 4. FOUNDATIONS
+# 4. FOUNDATIONS — DOWHY INTERFACE
 # ============================================================
 
 class Foundations:
     """
-    Interface to established scientific and technical foundations.
+    Interface to established causal inference technology.
 
-    DoWhy is imported only when causal analysis is requested.
-    This allows the core history system to be inspected separately
-    from optional causal-analysis dependencies.
+    DoWhy is loaded only when a causal operation is requested.
     """
+
+    @staticmethod
+    def _validate_dataframe(
+        data,
+        treatment: str,
+        outcome: str,
+        common_causes: list[str],
+    ) -> None:
+
+        if not hasattr(data, "columns"):
+            raise ValidationError(
+                "Data must provide DataFrame-style columns."
+            )
+
+        required = [treatment, outcome] + common_causes
+
+        missing = [
+            column for column in required
+            if column not in data.columns
+        ]
+
+        if missing:
+            raise ValidationError(
+                f"Missing required columns: {missing}"
+            )
+
+    @staticmethod
+    def _load_dowhy():
+        try:
+            from dowhy import CausalModel
+            return CausalModel
+        except ImportError as exc:
+            raise CWIError(
+                "DoWhy is not installed. "
+                "Install requirements.txt first."
+            ) from exc
 
     @staticmethod
     def identify_and_estimate(
@@ -127,54 +247,36 @@ class Foundations:
         common_causes: Optional[list[str]] = None,
         effect_method: str = "backdoor.linear_regression",
     ) -> dict:
-        """
-        Attempt causal identification and estimation using DoWhy.
-
-        common_causes=None means that assumptions have not been
-        supplied. An empty list explicitly means no common causes
-        were specified by the experiment designer.
-
-        Do not interpret an estimate as proof of causation.
-        """
 
         treatment = validate_name(treatment, "treatment")
         outcome = validate_name(outcome, "outcome")
 
         if treatment == outcome:
             raise ValidationError(
-                "Treatment and outcome must be different variables."
+                "Treatment and outcome must differ."
             )
 
         if common_causes is None:
             raise ValidationError(
-                "Causal assumptions are required. "
-                "Specify common_causes explicitly."
+                "Explicit causal assumptions are required."
             )
 
         if not isinstance(common_causes, list):
-            raise ValidationError("common_causes must be a list.")
+            raise ValidationError(
+                "common_causes must be a list."
+            )
 
         for cause in common_causes:
             validate_name(cause, "common cause")
 
-        if treatment not in data.columns:
-            raise ValidationError(f"Treatment column '{treatment}' is missing.")
+        Foundations._validate_dataframe(
+            data,
+            treatment,
+            outcome,
+            common_causes,
+        )
 
-        if outcome not in data.columns:
-            raise ValidationError(f"Outcome column '{outcome}' is missing.")
-
-        for cause in common_causes:
-            if cause not in data.columns:
-                raise ValidationError(
-                    f"Common cause column '{cause}' is missing."
-                )
-
-        try:
-            from dowhy import CausalModel
-        except ImportError as exc:
-            raise CWIError(
-                "DoWhy is not installed. Install project requirements first."
-            ) from exc
+        CausalModel = Foundations._load_dowhy()
 
         model = CausalModel(
             data=data,
@@ -188,7 +290,9 @@ class Foundations:
         )
 
         if estimand is None:
-            raise CWIError("DoWhy did not return an identified estimand.")
+            raise CWIError(
+                "No identified estimand was returned."
+            )
 
         estimate = model.estimate_effect(
             estimand,
@@ -201,11 +305,13 @@ class Foundations:
             "common_causes": common_causes,
             "effect_method": effect_method,
             "estimand": str(estimand),
-            "estimate": float(estimate.value),
+            "estimate": validate_finite_number(
+                estimate.value,
+                "estimated effect",
+            ),
             "interpretation": (
-                "An estimate conditional on the supplied data, "
-                "causal assumptions and identification strategy. "
-                "It is not proof of causal truth."
+                "Conditional estimate based on supplied data "
+                "and assumptions; not proof of causal truth."
             ),
         }
 
@@ -218,33 +324,26 @@ class Foundations:
         effect_method: str = "backdoor.linear_regression",
         refutation_method: str = "random_common_cause",
     ) -> dict:
-        """
-        Run a DoWhy refutation test.
-
-        Refutation tests can probe robustness but cannot prove
-        that a causal model is correct.
-        """
 
         treatment = validate_name(treatment, "treatment")
         outcome = validate_name(outcome, "outcome")
 
-        if common_causes is None:
-            raise ValidationError(
-                "Explicit common-cause assumptions are required."
-            )
-
         if not isinstance(common_causes, list):
-            raise ValidationError("common_causes must be a list.")
+            raise ValidationError(
+                "common_causes must be an explicit list."
+            )
 
         for cause in common_causes:
             validate_name(cause, "common cause")
 
-        try:
-            from dowhy import CausalModel
-        except ImportError as exc:
-            raise CWIError(
-                "DoWhy is not installed. Install project requirements first."
-            ) from exc
+        Foundations._validate_dataframe(
+            data,
+            treatment,
+            outcome,
+            common_causes,
+        )
+
+        CausalModel = Foundations._load_dowhy()
 
         model = CausalModel(
             data=data,
@@ -256,6 +355,11 @@ class Foundations:
         estimand = model.identify_effect(
             proceed_when_unidentifiable=False
         )
+
+        if estimand is None:
+            raise CWIError(
+                "No identified estimand was returned."
+            )
 
         estimate = model.estimate_effect(
             estimand,
@@ -272,26 +376,27 @@ class Foundations:
             "refutation_method": refutation_method,
             "result": str(refutation),
             "scientific_boundary": (
-                "A refutation test does not prove causal truth."
+                "Refutation tests do not prove causal truth."
             ),
-        }
+        )
 
 
 # ============================================================
-# 5. PERSISTENT DATABASE
+# 5. PCI — PERSISTENT DATABASE
 # ============================================================
 
 class PCI:
     """
-    PCI coordinates experiments, predictions and feedback.
+    Persistent experiment, prediction and feedback manager.
 
-    Runtime records are stored in SQLite outside the source repository.
+    Runtime data is stored outside the source repository.
     """
 
     def __init__(
         self,
         database_path: Optional[str | Path] = None,
     ):
+
         self.database_path = (
             Path(database_path).expanduser()
             if database_path is not None
@@ -316,14 +421,68 @@ class PCI:
 
         return connection
 
+    # --------------------------------------------------------
+    # 5.1 DATABASE INITIALIZATION AND VERSION CHECK
+    # --------------------------------------------------------
+
     def _initialize_database(self) -> None:
+
         with self._connect() as connection:
+
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS metadata (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL
                 )
             """)
+
+            existing = connection.execute(
+                """
+                SELECT value
+                FROM metadata
+                WHERE key = ?
+                """,
+                ("schema_version",),
+            ).fetchone()
+
+            other_tables = connection.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'table'
+                AND name NOT LIKE 'sqlite_%'
+                AND name != 'metadata'
+                """
+            ).fetchall()
+
+            if existing is None:
+
+                if other_tables:
+                    raise DatabaseVersionError(
+                        "Database contains application tables "
+                        "but has no schema version. "
+                        "Manual review is required."
+                    )
+
+                connection.execute(
+                    """
+                    INSERT INTO metadata(key, value)
+                    VALUES (?, ?)
+                    """,
+                    (
+                        "schema_version",
+                        str(DATABASE_SCHEMA_VERSION),
+                    ),
+                )
+
+            elif int(existing["value"]) != DATABASE_SCHEMA_VERSION:
+
+                raise DatabaseVersionError(
+                    "Database schema version mismatch. "
+                    "A reviewed migration is required."
+                )
+
+            # Tables are created only after version validation.
 
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS experiments (
@@ -357,6 +516,7 @@ class PCI:
                     prediction_id TEXT NOT NULL UNIQUE,
                     experiment_id TEXT NOT NULL,
                     observed_effect REAL NOT NULL,
+                    estimand_json TEXT NOT NULL,
                     observation_description TEXT NOT NULL,
                     created_at TEXT NOT NULL,
 
@@ -380,28 +540,8 @@ class PCI:
                 ON feedback(experiment_id)
             """)
 
-            existing = connection.execute(
-                "SELECT value FROM metadata WHERE key = ?",
-                ("schema_version",),
-            ).fetchone()
-
-            if existing is None:
-                connection.execute(
-                    "INSERT INTO metadata(key, value) VALUES (?, ?)",
-                    (
-                        "schema_version",
-                        str(DATABASE_SCHEMA_VERSION),
-                    ),
-                )
-
-            elif int(existing["value"]) != DATABASE_SCHEMA_VERSION:
-                raise DatabaseVersionError(
-                    "Database schema version mismatch. "
-                    "A reviewed migration is required."
-                )
-
     # --------------------------------------------------------
-    # 5.1 CREATE EXPERIMENT
+    # 5.2 CREATE EXPERIMENT
     # --------------------------------------------------------
 
     def create_experiment(
@@ -411,19 +551,26 @@ class PCI:
         dataset: Any,
         assumptions: dict,
     ) -> str:
+
         name = validate_name(name, "experiment name")
 
         if not isinstance(description, str):
-            raise ValidationError("description must be a string.")
+            raise ValidationError(
+                "description must be a string."
+            )
 
         if not isinstance(assumptions, dict):
-            raise ValidationError("assumptions must be a dictionary.")
+            raise ValidationError(
+                "assumptions must be a dictionary."
+            )
 
-        experiment_id = create_id()
         dataset_hash = fingerprint_dataset(dataset)
         assumptions_json = canonical_json(assumptions)
 
+        experiment_id = create_id()
+
         with self._connect() as connection:
+
             connection.execute(
                 """
                 INSERT INTO experiments (
@@ -449,7 +596,7 @@ class PCI:
         return experiment_id
 
     # --------------------------------------------------------
-    # 5.2 RECORD PREDICTION
+    # 5.3 RECORD PREDICTION
     # --------------------------------------------------------
 
     def record_prediction(
@@ -460,6 +607,7 @@ class PCI:
         predicted_effect: float,
         estimand: dict,
     ) -> str:
+
         experiment_id = validate_name(
             experiment_id,
             "experiment_id",
@@ -470,31 +618,20 @@ class PCI:
 
         if treatment == outcome:
             raise ValidationError(
-                "Treatment and outcome must be different."
+                "Treatment and outcome must differ."
             )
 
-        if isinstance(predicted_effect, bool):
-            raise ValidationError("predicted_effect must be numeric.")
+        predicted_effect = validate_finite_number(
+            predicted_effect,
+            "predicted_effect",
+        )
 
-        try:
-            predicted_effect = float(predicted_effect)
-        except (TypeError, ValueError) as exc:
-            raise ValidationError(
-                "predicted_effect must be numeric."
-            ) from exc
+        estimand_json = validate_estimand(estimand)
 
-        if not __import__("math").isfinite(predicted_effect):
-            raise ValidationError(
-                "predicted_effect must be finite."
-            )
-
-        if not isinstance(estimand, dict):
-            raise ValidationError("estimand must be a dictionary.")
-
-        estimand_json = canonical_json(estimand)
         prediction_id = create_id()
 
         with self._connect() as connection:
+
             experiment = connection.execute(
                 """
                 SELECT experiment_id
@@ -536,7 +673,7 @@ class PCI:
         return prediction_id
 
     # --------------------------------------------------------
-    # 5.3 RECORD FEEDBACK
+    # 5.4 RECORD MATCHED FEEDBACK
     # --------------------------------------------------------
 
     def record_feedback(
@@ -544,38 +681,40 @@ class PCI:
         prediction_id: str,
         observed_effect: float,
         observation_description: str,
+        estimand: dict,
     ) -> str:
+        """
+        Feedback must describe a measured effect for the same
+        estimand as the original prediction.
+
+        A raw individual outcome is not automatically a causal
+        effect and must not be submitted as one.
+        """
+
         prediction_id = validate_name(
             prediction_id,
             "prediction_id",
         )
 
-        if isinstance(observed_effect, bool):
-            raise ValidationError("observed_effect must be numeric.")
-
-        try:
-            observed_effect = float(observed_effect)
-        except (TypeError, ValueError) as exc:
-            raise ValidationError(
-                "observed_effect must be numeric."
-            ) from exc
-
-        if not __import__("math").isfinite(observed_effect):
-            raise ValidationError(
-                "observed_effect must be finite."
-            )
+        observed_effect = validate_finite_number(
+            observed_effect,
+            "observed_effect",
+        )
 
         if not isinstance(observation_description, str):
             raise ValidationError(
                 "observation_description must be a string."
             )
 
+        feedback_estimand_json = validate_estimand(estimand)
+
         feedback_id = create_id()
 
         with self._connect() as connection:
+
             prediction = connection.execute(
                 """
-                SELECT prediction_id, experiment_id
+                SELECT prediction_id, experiment_id, estimand_json
                 FROM predictions
                 WHERE prediction_id = ?
                 """,
@@ -587,6 +726,12 @@ class PCI:
                     f"Prediction '{prediction_id}' does not exist."
                 )
 
+            if prediction["estimand_json"] != feedback_estimand_json:
+                raise ValidationError(
+                    "Feedback estimand does not match prediction "
+                    "estimand. Comparison is not scientifically valid."
+                )
+
             connection.execute(
                 """
                 INSERT INTO feedback (
@@ -594,16 +739,18 @@ class PCI:
                     prediction_id,
                     experiment_id,
                     observed_effect,
+                    estimand_json,
                     observation_description,
                     created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     feedback_id,
                     prediction_id,
                     prediction["experiment_id"],
                     observed_effect,
+                    feedback_estimand_json,
                     observation_description,
                     utc_now(),
                 ),
@@ -612,19 +759,21 @@ class PCI:
         return feedback_id
 
     # --------------------------------------------------------
-    # 5.4 READ EXPERIMENT HISTORY
+    # 5.5 READ EXPERIMENT HISTORY
     # --------------------------------------------------------
 
     def get_experiment_history(
         self,
         experiment_id: str,
     ) -> dict:
+
         experiment_id = validate_name(
             experiment_id,
             "experiment_id",
         )
 
         with self._connect() as connection:
+
             experiment = connection.execute(
                 """
                 SELECT *
@@ -670,7 +819,7 @@ class PCI:
         }
 
     # --------------------------------------------------------
-    # 5.5 CALIBRATION DIAGNOSTICS
+    # 5.6 CALIBRATION DIAGNOSTICS
     # --------------------------------------------------------
 
     def calibration_diagnostics(
@@ -678,10 +827,10 @@ class PCI:
         experiment_id: str,
     ) -> dict:
         """
-        Compare recorded predictions with matching feedback.
+        Compare only feedback whose estimand matches its prediction.
 
-        This is a basic error diagnostic, not a causal effect
-        validation system or an automatic learning algorithm.
+        This is a diagnostic, not automatic learning or proof
+        of causal validity.
         """
 
         history = self.get_experiment_history(experiment_id)
@@ -694,19 +843,30 @@ class PCI:
         comparisons = []
 
         for item in history["feedback"]:
-            prediction = predictions.get(item["prediction_id"])
+
+            prediction = predictions.get(
+                item["prediction_id"]
+            )
 
             if prediction is None:
                 continue
+
+            if (
+                prediction["estimand_json"]
+                != item["estimand_json"]
+            ):
+                continue
+
+            absolute_error = abs(
+                prediction["predicted_effect"]
+                - item["observed_effect"]
+            )
 
             comparisons.append({
                 "prediction_id": item["prediction_id"],
                 "predicted_effect": prediction["predicted_effect"],
                 "observed_effect": item["observed_effect"],
-                "absolute_error": abs(
-                    prediction["predicted_effect"]
-                    - item["observed_effect"]
-                ),
+                "absolute_error": absolute_error,
             })
 
         if not comparisons:
@@ -715,7 +875,7 @@ class PCI:
                 "comparison_count": 0,
                 "mean_absolute_error": None,
                 "comparisons": [],
-                "status": "insufficient_feedback",
+                "status": "insufficient_matched_feedback",
             }
 
         mean_absolute_error = sum(
@@ -737,6 +897,7 @@ class PCI:
 # ============================================================
 
 def system_information() -> dict:
+
     return {
         "project": PROJECT_NAME,
         "architecture": ARCHITECTURE_NAME,
@@ -744,6 +905,7 @@ def system_information() -> dict:
         "experiment": EXPERIMENT_ID,
         "database": str(DEFAULT_DATABASE_PATH),
         "database_schema_version": DATABASE_SCHEMA_VERSION,
+        "fingerprint_version": FINGERPRINT_VERSION,
         "runtime_storage": "SQLite",
         "scientific_status": (
             "Research implementation; not independently validated."
@@ -756,8 +918,11 @@ def system_information() -> dict:
 # ============================================================
 
 if __name__ == "__main__":
-    print(json.dumps(
-        system_information(),
-        indent=2,
-        ensure_ascii=False,
-    ))
+
+    print(
+        json.dumps(
+            system_information(),
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
