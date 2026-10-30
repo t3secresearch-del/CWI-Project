@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "name": "Causal World Intelligence",
+    "short_name": "CWI",
+    "experiment": "EXP-047B",
+    "architecture": "Predictive Causal Intelligence",
+    "architecture_id": "PCI",
+    "architecture_version": "0.1.0",
+    "author": "Nasri - T3Sec Research",
+    "philosophy": "We don't reinvent concrete, we build a house that never existed."
+  },
+  "history": {
+    "EXP-047": {
+      "status": "lost",
+      "reason": "Colab /content storage reset",
+      "recovery": "Reconstruction through GitHub"
+    },
+    "EXP-047B": {
+      "status": "reconstruction",
+      "source_of_truth": "GitHub repository",
+      "branch": "main"
+    }
+  },
+  "reused_foundations": [
+    {
+      "name": "DoWhy",
+      "category": "causal_inference",
+      "role": "Causal identification, estimation and refutation",
+      "ownership": "external",
+      "usage_status": "planned_for_v0.1"
+    },
+    {
+      "name": "Judea Pearl causal framework",
+      "category": "causal_theory",
+      "role": "Theoretical foundation for causal reasoning",
+      "ownership": "external",
+      "usage_status": "theoretical_foundation"
+    },
+    {
+      "name": "PyTorch",
+      "category": "deep_learning",
+      "role": "Potential future neural learning component",
+      "ownership": "external",
+      "usage_status": "reserved_not_required_in_v0.1"
+    },
+    {
+      "name": "Active Learning",
+      "category": "learning_method",
+      "role": "Guidance for selecting informative observations and experiments",
+      "ownership": "established_research_area",
+      "usage_status": "future_integration"
+    }
+  ],
+  "original_architecture": [
+    {
+      "name": "PCI",
+      "full_name": "Predictive Causal Intelligence",
+      "role": "Coordinate causal predictions, experiment records and feedback",
+      "ownership": "CWI_project_design",
+      "status": "under_development"
+    },
+    {
+      "name": "Persistent Feedback Learning",
+      "role": "Maintain traceable feedback linked to specific predictions and experiments",
+      "ownership": "CWI_project_design",
+      "status": "planned_for_v0.1"
+    },
+    {
+      "name": "Adaptive Calibration",
+      "role": "Evaluate and adjust defined prediction calibration parameters using valid comparable feedback",
+      "ownership": "CWI_project_design",
+      "status": "planned_for_v0.1"
+    }
+  ],
+  "engineering_principles": [
+    "Explicit causal assumptions",
+    "Reproducible experiments",
+    "Dataset provenance and fingerprinting",
+    "Persistent experiment history",
+    "Traceable feedback",
+    "Versioned configuration",
+    "Separation of causal inference and prediction calibration",
+    "No silent data corruption handling",
+    "No autonomous source-code modification"
+  ],
+  "scientific_boundaries": [
+    "Correlation alone does not establish causation.",
+    "Causal conclusions depend on data and assumptions.",
+    "Refutation tests do not prove causal truth.",
+    "PCI does not automatically discover causal truth.",
+    "Claims of scientific novelty require independent literature review."
+  ],
+  "runtime_policy": {
+    "persistent_data_location": "~/.cwi/",
+    "database": "SQLite",
+    "runtime_data_in_git": false,
+    "source_code_in_git": true
+  },
+  "verification": {
+    "tests_run": false,
+    "implementation_verified": false,
+    "note": "These statuses must only be updated after actual verification."
+  }
+}
