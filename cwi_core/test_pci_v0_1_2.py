@@ -3,19 +3,25 @@
 CWI — PCI v0.1.2 Test Suite
 Experiment: EXP-047B
 
-Tests core validation, estimand consistency,
-database persistence, feedback and diagnostics.
+Tests:
+- Estimand contract and validation
+- Numeric validation
+- Database initialization and persistence
+- Prediction and feedback matching
+- Calibration diagnostics
+
+These are unit tests. They do not yet validate
+the real DoWhy causal-estimation integration.
 """
 
 import tempfile
 import unittest
 from pathlib import Path
 
-from v0_1_2_pci_implementation import (
+from .v0_1_2_pci_implementation import (
     PCI,
     ValidationError,
     build_estimand_descriptor,
-    canonical_json,
     validate_estimand,
     validate_finite_number,
 )
@@ -38,6 +44,7 @@ class TestEstimandContract(unittest.TestCase):
     def test_estimand_is_deterministic(self):
         first = validate_estimand(self.estimand)
         second = validate_estimand(self.estimand)
+
         self.assertEqual(first, second)
 
     def test_invalid_estimand_rejected(self):
@@ -56,6 +63,23 @@ class TestEstimandContract(unittest.TestCase):
             build_estimand_descriptor(
                 treatment="same",
                 outcome="same",
+            )
+
+    def test_treated_and_control_values_must_differ(self):
+        with self.assertRaises(ValidationError):
+            build_estimand_descriptor(
+                treatment="training",
+                outcome="productivity",
+                treated_value=1,
+                control_value=1,
+            )
+
+    def test_invalid_population_rejected(self):
+        with self.assertRaises(ValidationError):
+            build_estimand_descriptor(
+                treatment="training",
+                outcome="productivity",
+                population={},
             )
 
 
@@ -144,10 +168,7 @@ class TestPCIDatabase(unittest.TestCase):
             self.experiment_id
         )
 
-        self.assertEqual(
-            len(history["predictions"]),
-            1,
-        )
+        self.assertEqual(len(history["predictions"]), 1)
 
         self.assertEqual(
             history["predictions"][0]["prediction_id"],
@@ -223,6 +244,7 @@ class TestPCIDatabase(unittest.TestCase):
         )
 
         self.assertEqual(result["comparison_count"], 1)
+
         self.assertAlmostEqual(
             result["mean_absolute_error"],
             1.0,
