@@ -1,0 +1,76 @@
+{
+  "challenge": "CWI_FCI_NONLINEAR_v2",
+  "condition": "Nonlinear relationships with one hidden confounder",
+  "timestamp_utc": "2026-11-01T22:52:22.190419+00:00",
+  "seed": 24031,
+  "sample_size": 600,
+  "observed_variables": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "hidden_variable": "U",
+  "hidden_variable_supplied_to_algorithm": false,
+  "algorithm": "causal-learn FCI",
+  "independence_test": "KCI",
+  "alpha": 0.01,
+  "runtime_seconds": 9.001,
+  "expected_adjacencies": [
+    "A-B",
+    "A-C",
+    "B-C",
+    "C-D"
+  ],
+  "found_adjacencies": [
+    "A-B",
+    "A-C",
+    "B-C",
+    "C-D"
+  ],
+  "endpoint_details": [
+    {
+      "edge": "A-B",
+      "endpoint_i": 2,
+      "endpoint_j": 2
+    },
+    {
+      "edge": "A-C",
+      "endpoint_i": 2,
+      "endpoint_j": 2
+    },
+    {
+      "edge": "B-C",
+      "endpoint_i": 2,
+      "endpoint_j": 2
+    },
+    {
+      "edge": "C-D",
+      "endpoint_i": 2,
+      "endpoint_j": 2
+    }
+  ],
+  "metrics": {
+    "TP": 4,
+    "FP": 0,
+    "FN": 0,
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "checks": {
+    "precision_at_least_0_75": true,
+    "recall_at_least_0_75": true,
+    "hidden_confounder_adjacency_A_B_found": true,
+    "direct_chain_edge_C_D_found": true
+  },
+  "checks_passed": 4,
+  "checks_total": 4,
+  "status": "PASS",
+  "limitations": [
+    "Synthetic data only",
+    "One nonlinear data-generating structure",
+    "One seed and one sample size",
+    "Adjacency recovery does not prove causal orientation",
+    "Does not establish real-world hidden-confounder discovery"
+  ]
+}
