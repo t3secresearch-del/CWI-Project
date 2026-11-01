@@ -1,0 +1,526 @@
+{
+  "ab_found_count": 9,
+  "acceptance_checks": {
+    "ab_found_in_at_least_6_of_9": true,
+    "median_jaccard_at_least_0_70": true,
+    "median_precision_at_least_0_75": true,
+    "median_recall_at_least_0_75": true
+  },
+  "algorithm": "FCI",
+  "alpha": 0.01,
+  "challenge": "CWI_FCI_STABILITY_v1",
+  "checks_passed": 4,
+  "checks_total": 4,
+  "dataset_count": 9,
+  "hidden_variable_supplied": false,
+  "independence_test": "Fisher-Z",
+  "limitations": [
+    "Synthetic linear Gaussian data only.",
+    "FCI results depend on conditional-independence assumptions.",
+    "Adjacency does not establish direct causation.",
+    "This test does not establish universal causal discovery."
+  ],
+  "median_jaccard_stability": 1.0,
+  "median_precision": 1.0,
+  "median_recall": 1.0,
+  "runs": [
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 3000,
+      "seed": 101,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 6000,
+      "seed": 101,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 12000,
+      "seed": 101,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 3000,
+      "seed": 202,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 6000,
+      "seed": 202,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 12000,
+      "seed": 202,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 3000,
+      "seed": 303,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 6000,
+      "seed": 303,
+      "true_positives": 4
+    },
+    {
+      "ab_found": true,
+      "edges": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "C",
+          "D"
+        ]
+      ],
+      "endpoint_marks": [
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "B"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "A",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "B",
+          "node2": "C"
+        },
+        {
+          "endpoint1": "CIRCLE",
+          "endpoint2": "CIRCLE",
+          "node1": "C",
+          "node2": "D"
+        }
+      ],
+      "false_negatives": 0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 12000,
+      "seed": 303,
+      "true_positives": 4
+    }
+  ],
+  "sample_sizes": [
+    3000,
+    6000,
+    12000
+  ],
+  "seeds": [
+    101,
+    202,
+    303
+  ],
+  "timestamp_utc": "2026-11-01T22:31:41.333447+00:00",
+  "true_graph_supplied": false
+}
