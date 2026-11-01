@@ -1,0 +1,71 @@
+{
+  "challenge": "CWI_FCI_NON_GAUSSIAN_v3",
+  "timestamp_utc": "2026-11-01T22:59:01.422487+00:00",
+  "seed": 24032,
+  "sample_size": 600,
+  "observed_variables": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "hidden_variable": "U",
+  "hidden_variable_supplied_to_algorithm": false,
+  "noise_distribution": "Laplace",
+  "noise_variance": 1.0,
+  "algorithm": "causal-learn FCI",
+  "independence_test": "KCI",
+  "alpha": 0.01,
+  "runtime_seconds": 4.744,
+  "expected_adjacencies": [
+    "A-B",
+    "A-C",
+    "B-C",
+    "C-D"
+  ],
+  "found_adjacencies": [
+    "A-C",
+    "B-C",
+    "C-D"
+  ],
+  "endpoint_details": [
+    {
+      "edge": "A-C",
+      "endpoint_i": 2,
+      "endpoint_j": 1
+    },
+    {
+      "edge": "B-C",
+      "endpoint_i": 2,
+      "endpoint_j": 1
+    },
+    {
+      "edge": "C-D",
+      "endpoint_i": 1,
+      "endpoint_j": 2
+    }
+  ],
+  "metrics": {
+    "TP": 3,
+    "FP": 0,
+    "FN": 1,
+    "precision": 1.0,
+    "recall": 0.75
+  },
+  "checks": {
+    "precision_at_least_0_75": true,
+    "recall_at_least_0_75": true,
+    "hidden_confounder_adjacency_A_B_found": false,
+    "direct_chain_edge_C_D_found": true
+  },
+  "checks_passed": 3,
+  "checks_total": 4,
+  "status": "FAIL",
+  "limitations": [
+    "Synthetic data only",
+    "One seed and one sample size",
+    "One nonlinear structural model",
+    "Adjacency recovery does not prove orientation",
+    "Does not establish universal causal discovery"
+  ]
+}
