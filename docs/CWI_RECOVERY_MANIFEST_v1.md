@@ -7,7 +7,7 @@ This document distinguishes verified evidence from missing artifacts.
 ## Repository baseline
 - Repository: https://github.com/t3secresearch-del/CWI-Project
 - Branch: main
-- Baseline HEAD before this manifest: c6aaea23dd43760cad54c0bc70b54e515431fe11
+- Baseline HEAD before this manifest: 04670bb67697aceeab552a40c946823677b87b48
 - Working tree before this manifest: CLEAN
 - Inventory count: 17 files
 - PCI implementation files: 3
